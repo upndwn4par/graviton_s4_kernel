@@ -1673,9 +1673,10 @@ static int max77693_muic_handle_attach(struct max77693_muic_info *info,
 	       	}
 		break;
 	case CABLE_TYPE_TA_MUIC:
-		if ((adc != ADC_OPEN) || (!vbvolt)) {
-			dev_warn(info->dev, "%s: assume ta detach\n",
-				__func__);
+		if (((adc != ADC_OPEN) && (adc != ADC_CEA936ATYPE1_CHG) && (adc != ADC_CEA936ATYPE2_CHG))
+			 || (!vbvolt)) {
+        		dev_warn(info->dev, "%s: assume ta detach\n",
+        			__func__);
 			info->cable_type = CABLE_TYPE_NONE_MUIC;
 			max77693_muic_set_charging_type(info, false);
 			return 0;
@@ -1877,6 +1878,11 @@ static int max77693_muic_handle_attach(struct max77693_muic_info *info,
 	default:
 		dev_warn(info->dev, "%s: unsupported adc=0x%x\n", __func__,
 			 adc);
+		info->cable_type = CABLE_TYPE_INCOMPATIBLE_MUIC;
+
+		ret = max77693_muic_set_charging_type(info, !vbvolt);
+		if (ret)
+			info->cable_type = CABLE_TYPE_NONE_MUIC;
 		break;
 	}
 	return ret;
